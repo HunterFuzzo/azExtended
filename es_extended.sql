@@ -1,0 +1,33 @@
+CREATE DATABASE IF NOT EXISTS `es_extended`;
+
+ALTER DATABASE `es_extended`
+	DEFAULT CHARACTER SET UTF8MB4;
+	
+ALTER DATABASE `es_extended`
+	DEFAULT COLLATE UTF8MB4_UNICODE_CI;
+
+USE `es_extended`;
+
+CREATE TABLE `users` (
+	`identifier` VARCHAR(60) NOT NULL,
+	`ssn` VARCHAR(11) NOT NULL,
+	`accounts` LONGTEXT NULL DEFAULT NULL,
+	`group` VARCHAR(50) NULL DEFAULT 'user',
+	`inventory` LONGTEXT NULL DEFAULT NULL,
+	`loadout` LONGTEXT NULL DEFAULT NULL,
+	`metadata` LONGTEXT NULL DEFAULT NULL,
+	`position` longtext NULL DEFAULT NULL,
+
+	PRIMARY KEY (`identifier`),
+	UNIQUE KEY `unique_ssn` (`ssn`)
+) ENGINE=InnoDB;
+
+CREATE TABLE `items` (
+	`name` VARCHAR(50) NOT NULL,
+	`label` VARCHAR(50) NOT NULL,
+	`weight` INT NOT NULL DEFAULT 1,
+	`rare` TINYINT NOT NULL DEFAULT 0,
+	`can_remove` TINYINT NOT NULL DEFAULT 1,
+
+	PRIMARY KEY (`name`)
+) ENGINE=InnoDB;
