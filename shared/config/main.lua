@@ -8,21 +8,13 @@ Config.Locale = (esxLocale ~= "invalid") and esxLocale or (txAdminLocale ~= "cus
 Config.CustomInventory = false
 
 Config.Accounts = {
-    bank = {
-        label = TranslateCap("account_bank"),
-        round = true,
-    },
-    black_money = {
-        label = TranslateCap("account_black_money"),
-        round = true,
-    },
     money = {
         label = TranslateCap("account_money"),
         round = true,
     },
 }
 
-Config.StartingAccountMoney = { bank = 0 }
+Config.StartingAccountMoney = {}
 
 Config.StartingInventoryItems = false -- table/false
 

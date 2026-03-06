@@ -191,29 +191,21 @@ if not Config.CustomInventory then
     ESX.SecureNetEvent("esx:addInventoryItem", function(item, count, showNotification)
         for k, v in ipairs(ESX.PlayerData.inventory) do
             if v.name == item then
-                ESX.UI.ShowInventoryItemNotification(true, v.label, count - v.count)
                 ESX.PlayerData.inventory[k].count = count
                 break
             end
         end
 
-        if showNotification then
-            ESX.UI.ShowInventoryItemNotification(true, item, count)
-        end
     end)
 
     ESX.SecureNetEvent("esx:removeInventoryItem", function(item, count, showNotification)
         for i = 1, #ESX.PlayerData.inventory do
             if ESX.PlayerData.inventory[i].name == item then
-                ESX.UI.ShowInventoryItemNotification(false, ESX.PlayerData.inventory[i].label, ESX.PlayerData.inventory[i].count - count)
                 ESX.PlayerData.inventory[i].count = count
                 break
             end
         end
 
-        if showNotification then
-            ESX.UI.ShowInventoryItemNotification(false, item, count)
-        end
     end)
 
     ESX.SecureNetEvent("esx:addLoadoutItem", function(weaponName, weaponLabel, ammo)
@@ -633,7 +625,6 @@ end)
 Citizen.CreateThread(function()
     while true do
         Citizen.Wait(0)
-        -- Désactive l'affichage des entrées d'items/argent en bas à droite
-        HideHudComponentThisFrame(20) 
+        SetPlayerFallDistanceCheckEntity(PlayerId(), false)
     end
 end)
