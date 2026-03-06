@@ -83,9 +83,29 @@ AddEventHandler("esx:onPlayerSpawn", function()
     end
 end)
 
-AddEventHandler("esx:onPlayerDeath", function()
-    ESX.SetPlayerData("ped", PlayerPedId())
-    ESX.SetPlayerData("dead", true)
+-- CÔTÉ CLIENT
+Citizen.CreateThread(function()
+    local isAlreadyDead = false
+    while true do
+        Citizen.Wait(500)
+        local playerPed = PlayerPedId()
+
+        if IsEntityDead(playerPed) and not isAlreadyDead then
+            print("MANUAL DEBUG: Mort détectée !")
+            isAlreadyDead = true
+            
+            ESX.SetPlayerData("dead", true)
+            SetCurrentPedWeapon(playerPed, `WEAPON_UNARMED`, true)
+            
+            TriggerServerEvent('az_inventory:dropBagOnDeath')
+            
+        elseif not IsEntityDead(playerPed) and isAlreadyDead then
+
+            isAlreadyDead = false
+            ESX.SetPlayerData("dead", false)
+            print("MANUAL DEBUG: Joueur vivant, prêt pour la prochaine mort.")
+        end
+    end
 end)
 
 AddEventHandler("skinchanger:modelLoaded", function()
@@ -607,5 +627,13 @@ AddEventHandler("onResourceStop", function(resource)
         for i = 1, #Core.Events[resource] do
             RemoveEventHandler(Core.Events[resource][i])
         end
+    end
+end)
+
+Citizen.CreateThread(function()
+    while true do
+        Citizen.Wait(0)
+        -- Désactive l'affichage des entrées d'items/argent en bas à droite
+        HideHudComponentThisFrame(20) 
     end
 end)

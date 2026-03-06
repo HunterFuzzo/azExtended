@@ -28,7 +28,6 @@ server_scripts {
 	'server/classes/overrides/*.lua',
 	'server/functions.lua',
 	'server/modules/onesync.lua',
-	'server/modules/paycheck.lua',
 
 	'server/main.lua',
 	'server/modules/commands.lua',
