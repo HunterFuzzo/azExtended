@@ -5,16 +5,8 @@ local oneSyncState = GetConvar("onesync", "off")
 local newPlayer = "INSERT INTO `users` SET `accounts` = ?, `identifier` = ?, `group` = ?"
 local loadPlayer = "SELECT `accounts`, `group`, `position`, `inventory`, `skin`, `metadata`"
 
-if Config.Multichar then
-    newPlayer = newPlayer .. ", `firstname` = ?, `lastname` = ?, `sex` = ?, `height` = ?"
-end
-
 if Config.StartingInventoryItems then
     newPlayer = newPlayer .. ", `inventory` = ?"
-end
-
-if Config.Multichar or Config.Identity then
-    loadPlayer = loadPlayer .. ", `firstname`, `lastname`, `sex`, `height`"
 end
 
 loadPlayer = loadPlayer .. " FROM `users` WHERE identifier = ?"
@@ -31,9 +23,7 @@ local function createESXPlayer(identifier, playerId, data)
         print(("[^2INFO^0] Player ^5%s^0 Has been granted admin permissions via ^5Ace Perms^7."):format(playerId))
         defaultGroup = "admin"
     end
-    local parameters = Config.Multichar and
-        { json.encode(accounts), identifier, Core.generateSSN(), defaultGroup, data.firstname, data.lastname, data.dateofbirth, data.sex, data.height }
-        or { json.encode(accounts), identifier, Core.generateSSN(), defaultGroup }
+    local parameters = { json.encode(accounts), identifier, defaultGroup }
 
     if Config.StartingInventoryItems then
         table.insert(parameters, json.encode(Config.StartingInventoryItems))
@@ -180,10 +170,6 @@ function loadESXPlayer(identifier, playerId, isNew)
         weight = 0,
         name = GetPlayerName(playerId),
         identifier = identifier,
-        firstName = "John",
-        lastName = "Doe",
-        dateofbirth = "01/01/2000",
-        height = 120,
         dead = false,
     }
 
@@ -205,9 +191,6 @@ function loadESXPlayer(identifier, playerId, isNew)
             index = index,
         }
     end
-
-    -- SSN
-    userData.ssn = result.ssn
 
     -- Inventory
     if not Config.CustomInventory then
@@ -271,7 +254,7 @@ function loadESXPlayer(identifier, playerId, isNew)
     userData.coords = json.decode(result.position) or Config.DefaultSpawns[ESX.Math.Random(1,#Config.DefaultSpawns)]
 
     -- Skin
-    userData.skin = (result.skin and result.skin ~= "") and json.decode(result.skin) or { sex = userData.sex == "f" and 1 or 0 }
+    userData.skin = (result.skin and result.skin ~= "") and json.decode(result.skin) or { sex = 0 }
 
     -- Metadata
     userData.metadata = (result.metadata and result.metadata ~= "") and json.decode(result.metadata) or {}
@@ -283,31 +266,9 @@ function loadESXPlayer(identifier, playerId, isNew)
     ESX.Players[playerId] = xPlayer
     Core.playersByIdentifier[identifier] = xPlayer
 
-    -- Identity
-    if result.firstname and result.firstname ~= "" then
-        userData.firstName = result.firstname
-        userData.lastName = result.lastname
-
-        local name = ("%s %s"):format(result.firstname, result.lastname)
-        userData.name = name
-
-        xPlayer.set("firstName", result.firstname)
-        xPlayer.set("lastName", result.lastname)
-        xPlayer.setName(name)
-
-        if result.dateofbirth then
-            userData.dateofbirth = result.dateofbirth
-            xPlayer.set("dateofbirth", result.dateofbirth)
-        end
-        if result.sex then
-            userData.sex = result.sex
-            xPlayer.set("sex", result.sex)
-        end
-        if result.height then
-            userData.height = result.height
-            xPlayer.set("height", result.height)
-        end
-    end
+    -- Identity (Removed database fetching, assigning fallback to player name)
+    userData.name = GetPlayerName(playerId)
+    xPlayer.setName(userData.name)
 
     TriggerEvent("esx:playerLoaded", playerId, xPlayer, isNew)
     userData.money = xPlayer.getMoney()

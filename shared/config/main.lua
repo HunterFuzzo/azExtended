@@ -19,7 +19,7 @@ Config.StartingAccountMoney = {}
 Config.StartingInventoryItems = false -- table/false
 
 Config.DefaultSpawns = { -- If you want to have more spawn positions and select them randomly uncomment commented code or add more locations
-    { x = 222.2027, y = -864.0162, z = 30.2922, heading = 1.0 },
+    { x = -442.16, y = -912.33, z = 29.39, heading = 73.0 },
 }
 
 Config.AdminGroups = {
@@ -35,12 +35,12 @@ Config.ValidCharacterSets = { -- Only enable additional charsets if your server 
     ['zh-cn'] = false -- Chinese, Japanese, Korean
 }
 
-Config.MaxWeight = 24 -- the max inventory weight without a backpack
+Config.MaxWeight = 1000 -- the max inventory weight without a backpack
 Config.SaveDeathStatus = true -- Save the death status of a player
 Config.EnableDebug = false -- Use Debug options?
 
 Config.Multichar = GetResourceState("esx_multicharacter") ~= "missing"
-Config.Identity = true -- Select a character identity data before they have loaded in (this happens by default with multichar)
+Config.Identity = false -- Select a character identity data before they have loaded in (this happens by default with multichar)
 Config.DistanceGive = 4.0 -- Max distance when giving items, weapons etc.
 
 Config.AdminLogging = false -- Logs the usage of certain commands by those with group.admin ace permissions (default is false)

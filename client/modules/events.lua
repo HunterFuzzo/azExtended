@@ -91,7 +91,6 @@ Citizen.CreateThread(function()
         local playerPed = PlayerPedId()
 
         if IsEntityDead(playerPed) and not isAlreadyDead then
-            print("MANUAL DEBUG: Mort détectée !")
             isAlreadyDead = true
             
             ESX.SetPlayerData("dead", true)
@@ -103,7 +102,6 @@ Citizen.CreateThread(function()
 
             isAlreadyDead = false
             ESX.SetPlayerData("dead", false)
-            print("MANUAL DEBUG: Joueur vivant, prêt pour la prochaine mort.")
         end
     end
 end)
@@ -623,8 +621,63 @@ AddEventHandler("onResourceStop", function(resource)
 end)
 
 Citizen.CreateThread(function()
+    local lastHealth = 200
+
     while true do
         Citizen.Wait(0)
-        SetPlayerFallDistanceCheckEntity(PlayerId(), false)
+        local playerPed = PlayerPedId()
+
+        if IsPedFalling(playerPed) or IsEntityInAir(playerPed) then
+            
+            SetPedCanRagdoll(playerPed, false)
+            SetEntityProofs(playerPed, false, false, false, false, false, false, false, true)
+
+            local currentHealth = GetEntityHealth(playerPed)
+            if currentHealth < lastHealth then
+                SetEntityHealth(playerPed, lastHealth)
+            end
+        else
+            SetPedCanRagdoll(playerPed, true)
+            SetEntityProofs(playerPed, false, false, false, false, false, false, false, false)
+            
+            lastHealth = GetEntityHealth(playerPed)
+        end
+    end
+end)
+
+local isDead = false
+
+Citizen.CreateThread(function()
+    while true do
+        Citizen.Wait(1000)
+        local playerPed = PlayerPedId()
+
+        if IsEntityDead(playerPed) and not isDead then
+            isDead = true
+            
+            exports['az_notify']:ShowNotification('You are dead. Respawn in 5 seconds...', 27)
+
+            Citizen.Wait(5000)
+
+            DoScreenFadeOut(800)
+            while not IsScreenFadedOut() do Citizen.Wait(10) end
+
+            NetworkResurrectLocalPlayer(-442.16, -912.33, 29.39, 73.0, true, false)
+            
+            TriggerEvent('esx:onPlayerSpawn')
+            TriggerEvent('playerSpawned') 
+
+            -- Soins complets
+            local newPed = PlayerPedId()
+            SetEntityHealth(newPed, 200)
+            ClearPedBloodDamage(newPed)
+
+            Citizen.Wait(1000)
+            DoScreenFadeIn(800)
+            
+            exports['az_notify']:ShowNotification('You have been sent back to the Safe Zone', 18)
+            
+            isDead = false
+        end
     end
 end)

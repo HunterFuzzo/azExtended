@@ -27,6 +27,7 @@ function Death:ByPlayer()
 
     TriggerEvent("esx:onPlayerDeath", data)
     TriggerServerEvent("esx:onPlayerDeath", data)
+    self:ResetValues()
 end
 
 function Death:Natural()
@@ -41,6 +42,7 @@ function Death:Natural()
 
     TriggerEvent("esx:onPlayerDeath", data)
     TriggerServerEvent("esx:onPlayerDeath", data)
+    self:ResetValues()
 end
 
 function Death:Died()
@@ -51,16 +53,30 @@ function Death:Died()
 
     local isActive = NetworkIsPlayerActive(self.killerId)
 
+    self.isDead = true
+    AnimpostfxPlay("DeathFailOut", 0, true)
+
+    Citizen.CreateThread(function()
+        local scaleform = ESX.Scaleform.Utils.RunMethod("MP_BIG_MESSAGE_FREEMODE", "SHOW_SHARD_WASTED_MP_MESSAGE", false, "~r~You died", "You will respawn soon", 1)
+        while self.isDead do
+            Citizen.Wait(0)
+            DrawScaleformMovieFullscreen(scaleform, 255, 255, 255, 255, 0)
+        end
+        SetScaleformMovieAsNoLongerNeeded(scaleform)
+    end)
+
     if self.killerEntity ~= ESX.PlayerData.ped and self.killerId and isActive then
         self:ByPlayer()
     else
         self:Natural()
     end
-
     self:ResetValues()
 end
 
 AddEventHandler("esx:onPlayerSpawn", function()
+    Death.isDead = false
+    AnimpostfxStop("DeathFailOut")
+
     Citizen.CreateThreadNow(function()
         while not ESX.PlayerLoaded do Wait(0) end
 

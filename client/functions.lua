@@ -38,14 +38,14 @@ function ESX.SecureNetEvent(name, func)
 end
 
 local addonResourcesState = {
-    ['esx_progressbar'] = GetResourceState('esx_progressbar') ~= 'missing',
+    -- ['esx_progressbar'] = GetResourceState('esx_progressbar') ~= 'missing',
     ['esx_notify'] = GetResourceState('esx_notify') ~= 'missing',
     ['esx_textui'] = GetResourceState('esx_textui') ~= 'missing',
     ['esx_context'] = GetResourceState('esx_context') ~= 'missing',
 }
 
 local function IsResourceFound(resource)
-	return addonResourcesState[resource] or error(('Resource [^5%s^1] is Missing!'):format(resource))
+	return addonResourcesState[resource]
 end
 
 function ESX.DisableSpawnManager()

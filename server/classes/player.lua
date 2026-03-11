@@ -71,7 +71,6 @@
 ---@field getWeaponTint fun(weaponName: string): number                  # Get weapon tint.
 --- Player State Functions
 ---@field getIdentifier fun(): string                              # Get player's unique identifier.
----@field getSSN fun(): string                                      # Get player's social security number.
 ---@field getSource fun(): number                                  # Get player source/server ID.
 ---@field getPlayerId fun(): number                                # Alias for getSource.
 ---@field getName fun(): string                                     # Get player's name.
@@ -120,7 +119,6 @@
 
 ---@param playerId number
 ---@param identifier string
----@param ssn string
 ---@param group string
 ---@param accounts ESXAccount[]
 ---@param inventory table
@@ -138,7 +136,6 @@ function CreateExtendedPlayer(playerId, identifier, ssn, group, accounts, invent
     self.coords = coords
     self.group = group
     self.identifier = identifier
-    self.ssn = ssn
     self.inventory = inventory
     self.loadout = loadout
     self.name = name
