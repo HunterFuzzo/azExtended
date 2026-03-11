@@ -157,7 +157,7 @@ end
 ---@param position? string The position of the notification
 ---@return nil
 function ESX.ShowNotification(message, notifyType, length, title, position)
-	return IsResourceFound('esx_notify') and exports['esx_notify']:Notify(notifyType or "info", length or 5000, message, title, position)
+	return exports['az_notify']:ShowNotification(message)
 end
 
 function ESX.TextUI(...)
