@@ -38,7 +38,6 @@ function ESX.SecureNetEvent(name, func)
 end
 
 local addonResourcesState = {
-    -- ['esx_progressbar'] = GetResourceState('esx_progressbar') ~= 'missing',
     ['esx_notify'] = GetResourceState('esx_notify') ~= 'missing',
     ['esx_textui'] = GetResourceState('esx_textui') ~= 'missing',
     ['esx_context'] = GetResourceState('esx_context') ~= 'missing',
