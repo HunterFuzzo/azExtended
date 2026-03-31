@@ -235,6 +235,23 @@ function Adjustments:Multipliers()
     end)
 end
 
+function Adjustments:DisableHealthArmorBar()
+    CreateThread(function()
+        local minimap = RequestScaleformMovie("minimap")
+    
+        SetRadarBigmapEnabled(true, false)
+        Wait(0)
+        SetRadarBigmapEnabled(false, false)
+        
+        while true do
+            Wait(0)
+            BeginScaleformMovieMethod(minimap, "SETUP_HEALTH_ARMOUR")
+            ScaleformMovieMethodAddParamInt(3)
+            EndScaleformMovieMethod()
+        end
+    end)
+end
+
 function Adjustments:Load()
     self:RemoveHudComponents()
     self:DisableAimAssist()
@@ -250,4 +267,5 @@ function Adjustments:Load()
     self:WantedLevel()
     self:DisableRadio()
     self:Multipliers()
+    self:DisableHealthArmorBar()
 end

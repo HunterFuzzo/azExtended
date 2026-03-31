@@ -47,10 +47,8 @@ client_scripts {
 	'client/modules/points.lua',
 
 	'client/modules/events.lua',
-
 	'client/modules/actions.lua',
 	'client/modules/death.lua',
-	'client/modules/npwd.lua',
     'client/modules/interactions.lua',
 	'client/modules/scaleform.lua',
 	'client/modules/streaming.lua',

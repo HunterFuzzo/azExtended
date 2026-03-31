@@ -37,16 +37,6 @@ function ESX.SecureNetEvent(name, func)
     Core.Events[invokingResource][eventIndex] = event
 end
 
-local addonResourcesState = {
-    ['esx_notify'] = GetResourceState('esx_notify') ~= 'missing',
-    ['esx_textui'] = GetResourceState('esx_textui') ~= 'missing',
-    ['esx_context'] = GetResourceState('esx_context') ~= 'missing',
-}
-
-local function IsResourceFound(resource)
-	return addonResourcesState[resource]
-end
-
 function ESX.DisableSpawnManager()
     if GetResourceState("spawnmanager") == "started" then
         exports.spawnmanager:setAutoSpawn(false)
@@ -137,18 +127,6 @@ function ESX.SpawnPlayer(skin, coords, cb)
     cb()
 end
 
----@param message string
----@param length? number Timeout in milliseconds
----@param options? ProgressBarOptions
----@return boolean Success Whether the progress bar was successfully created or not
-function ESX.Progressbar(message, length, options)
-	return IsResourceFound('esx_progressbar') and exports['esx_progressbar']:Progressbar(message, length, options)
-end
-
-function ESX.CancelProgressbar()
-    return IsResourceFound('esx_progressbar') and exports['esx_progressbar']:CancelProgressbar()
-end
-
 ---@param message string The message to show
 ---@param notifyType? string The type of notification to show
 ---@param length? number The length of the notification
@@ -161,11 +139,6 @@ end
 
 function ESX.TextUI(...)
 	return IsResourceFound('esx_textui') and exports['esx_textui']:TextUI(...)
-end
-
----@return nil
-function ESX.HideUI()
-	return IsResourceFound('esx_textui') and exports['esx_textui']:HideUI()
 end
 
 ---@param sender string
@@ -227,22 +200,6 @@ end
 ---@return string The hashed string
 function ESX.HashString(str)
     return ('~INPUT_%s~'):format(('%x'):format(joaat(str) & 0x7fffffff + 2 ^ 31):upper())
-end
-
-function ESX.OpenContext(...)
-    return IsResourceFound('esx_context') and exports['esx_context']:Open(...)
-end
-
-function ESX.PreviewContext(...)
-    return IsResourceFound('esx_context') and exports['esx_context']:Preview(...)
-end
-
-function ESX.CloseContext(...)
-    return IsResourceFound('esx_context') and exports['esx_context']:Close(...)
-end
-
-function ESX.RefreshContext(...)
-    return IsResourceFound('esx_context') and exports['esx_context']:Refresh(...)
 end
 
 ---@param command_name string The command name
