@@ -29,8 +29,6 @@ RegisterNetEvent("esx:playerLoaded", function(xPlayer, _, skin)
         Wait(0)
     end
 
-    Adjustments:Load()
-
     ClearPedTasksImmediately(ESX.PlayerData.ped)
 
     if not Config.Multichar then

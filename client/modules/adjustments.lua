@@ -1,271 +1,133 @@
 Adjustments = {}
 
-function Adjustments:RemoveHudComponents()
-    for i = 1, #Config.RemoveHudComponents do
-        if Config.RemoveHudComponents[i] then
-            SetHudComponentSize(i, 0.0, 0.0)
-            SetHudComponentPosition(i, 900.0, 900.0)
-        end
-    end
-end
+-- 1. PERSISTENT GLOBAL ADJUSTMENTS (NPC Removal & Weapon Wheel Blocking)
+CreateThread(function()
+    while true do
+        Wait(0)
+        
+        -- Prevent Car Kill (Ramming Damage)
+        SetWeaponDamageModifier(`VEHICLE_HIT`, 0.0)
 
-function Adjustments:DisableAimAssist()
-    if Config.DisableAimAssist then
-        SetPlayerTargetingMode(3)
-    end
-end
-
-function Adjustments:DisableNPCDrops()
-    if Config.DisableNPCDrops then
-        local weaponPickups = { `PICKUP_WEAPON_CARBINERIFLE`, `PICKUP_WEAPON_PISTOL`, `PICKUP_WEAPON_PUMPSHOTGUN` }
-        for i = 1, #weaponPickups do
-            ToggleUsePickupsForPlayer(ESX.playerId, weaponPickups[i], false)
-        end
-    end
-end
-
-function Adjustments:SeatShuffle()
-    if Config.DisableVehicleSeatShuff then
-        AddEventHandler("esx:enteredVehicle", function(vehicle, _, seat)
-            if seat > -1 then
-                SetPedIntoVehicle(ESX.PlayerData.ped, vehicle, seat)
-                SetPedConfigFlag(ESX.PlayerData.ped, 184, true)
+        -- Block Weapon Wheel (TAB) & Hide Components
+        for i, status in pairs(Config.RemoveHudComponents) do
+            if status then
+                HideHudComponentThisFrame(i)
+                
+                -- Block the Weapon Wheel specifically
+                -- Using ONLY DisableControlAction(0, 37) as it is the most stable method
+                if i == 19 then
+                    DisableControlAction(0, 37, true) 
+                end
             end
-        end)
-    end
-end
-
-function Adjustments:HealthRegeneration()
-    if Config.DisableHealthRegeneration then
-        SetPlayerHealthRechargeMultiplier(ESX.playerId, 0.0)
-    end
-end
-
-function Adjustments:AmmoAndVehicleRewards()
-    CreateThread(function()
-        while true do
-            if Config.DisableDisplayAmmo then
-                DisplayAmmoThisFrame(false)
-            end
-
-            if Config.DisableVehicleRewards then
-                DisablePlayerVehicleRewards(ESX.playerId)
-            end
-
-            Wait(0)
         end
-    end)
-end
 
-function Adjustments:EnablePvP()
-    if Config.EnablePVP then
-        SetCanAttackFriendly(ESX.PlayerData.ped, true, false)
-        NetworkSetFriendlyFireOption(true)
+        -- 2. ABSOLUTE NPC REMOVAL (Ambient Peds & Vehicles)
+        SetPedDensityMultiplierThisFrame(0.0)
+        SetScenarioPedDensityMultiplierThisFrame(0.0, 0.0)
+        SetRandomVehicleDensityMultiplierThisFrame(0.0)
+        SetParkedVehicleDensityMultiplierThisFrame(0.0)
+        SetVehicleDensityMultiplierThisFrame(0.0)
+        
+        SetAmbientVehicleRangeMultiplierThisFrame(0.0)
+        SetAmbientPedRangeMultiplierThisFrame(0.0)
+        SetDistantCarsEnabled(false)
+        
+        SetEveryoneIgnorePlayer(PlayerId(), true)
+        SetPoliceIgnorePlayer(PlayerId(), true)
+        SetDispatchCopsForPlayer(PlayerId(), false)
     end
-end
+end)
 
-function Adjustments:DispatchServices()
-    if Config.DisableDispatchServices then
-        for i = 1, 15 do
-            EnableDispatchService(i, false)
+-- 3. BACKGROUND CLEANUP (Purge existing entities)
+CreateThread(function()
+    while true do
+        local playerPed = PlayerPedId()
+        if playerPed and playerPed ~= 0 then
+            local coords = GetEntityCoords(playerPed)
+            ClearAreaOfPeds(coords.x, coords.y, coords.z, 300.0, 1)
+            ClearAreaOfVehicles(coords.x, coords.y, coords.z, 300.0, false, false, false, false, false)
+            RemoveVehiclesFromGeneratorsInArea(coords.x - 500.0, coords.y - 500.0, coords.z - 500.0, coords.x + 500.0, coords.y + 500.0, coords.z + 500.0)
         end
-        SetAudioFlag('PoliceScannerDisabled', true)
+        Wait(5000)
     end
-end
+end)
 
-function Adjustments:NPCScenarios()
-    if Config.DisableScenarios then
-        local scenarios = {
-            "WORLD_VEHICLE_ATTRACTOR",
-            "WORLD_VEHICLE_AMBULANCE",
-            "WORLD_VEHICLE_BICYCLE_BMX",
-            "WORLD_VEHICLE_BICYCLE_BMX_BALLAS",
-            "WORLD_VEHICLE_BICYCLE_BMX_FAMILY",
-            "WORLD_VEHICLE_BICYCLE_BMX_HARMONY",
-            "WORLD_VEHICLE_BICYCLE_BMX_VAGOS",
-            "WORLD_VEHICLE_BICYCLE_MOUNTAIN",
-            "WORLD_VEHICLE_BICYCLE_ROAD",
-            "WORLD_VEHICLE_BIKE_OFF_ROAD_RACE",
-            "WORLD_VEHICLE_BIKER",
-            "WORLD_VEHICLE_BOAT_IDLE",
-            "WORLD_VEHICLE_BOAT_IDLE_ALAMO",
-            "WORLD_VEHICLE_BOAT_IDLE_MARQUIS",
-            "WORLD_VEHICLE_BROKEN_DOWN",
-            "WORLD_VEHICLE_BUSINESSMEN",
-            "WORLD_VEHICLE_HELI_LIFEGUARD",
-            "WORLD_VEHICLE_CLUCKIN_BELL_TRAILER",
-            "WORLD_VEHICLE_CONSTRUCTION_SOLO",
-            "WORLD_VEHICLE_CONSTRUCTION_PASSENGERS",
-            "WORLD_VEHICLE_DRIVE_PASSENGERS",
-            "WORLD_VEHICLE_DRIVE_PASSENGERS_LIMITED",
-            "WORLD_VEHICLE_DRIVE_SOLO",
-            "WORLD_VEHICLE_FIRE_TRUCK",
-            "WORLD_VEHICLE_EMPTY",
-            "WORLD_VEHICLE_MARIACHI",
-            "WORLD_VEHICLE_MECHANIC",
-            "WORLD_VEHICLE_MILITARY_PLANES_BIG",
-            "WORLD_VEHICLE_MILITARY_PLANES_SMALL",
-            "WORLD_VEHICLE_PARK_PARALLEL",
-            "WORLD_VEHICLE_PARK_PERPENDICULAR_NOSE_IN",
-            "WORLD_VEHICLE_PASSENGER_EXIT",
-            "WORLD_VEHICLE_POLICE_BIKE",
-            "WORLD_VEHICLE_POLICE_CAR",
-            "WORLD_VEHICLE_POLICE",
-            "WORLD_VEHICLE_POLICE_NEXT_TO_CAR",
-            "WORLD_VEHICLE_QUARRY",
-            "WORLD_VEHICLE_SALTON",
-            "WORLD_VEHICLE_SALTON_DIRT_BIKE",
-            "WORLD_VEHICLE_SECURITY_CAR",
-            "WORLD_VEHICLE_STREETRACE",
-            "WORLD_VEHICLE_TOURBUS",
-            "WORLD_VEHICLE_TOURIST",
-            "WORLD_VEHICLE_TANDL",
-            "WORLD_VEHICLE_TRACTOR",
-            "WORLD_VEHICLE_TRACTOR_BEACH",
-            "WORLD_VEHICLE_TRUCK_LOGS",
-            "WORLD_VEHICLE_TRUCKS_TRAILERS",
-            "WORLD_VEHICLE_DISTANT_EMPTY_GROUND",
-            "WORLD_HUMAN_PAPARAZZI",
-        }
+-- 4. INITIALIZATION ADJUSTMENTS
+CreateThread(function()
+    while not ESX.PlayerLoaded do Wait(100) end
+    
+    SetPlayerTargetingMode(0) -- Standard Free Aim (Best for PVP)
+    SetPlayerHealthRechargeMultiplier(ESX.playerId, 0.0)
+    ClearPlayerWantedLevel(ESX.playerId)
+    SetMaxWantedLevel(0)
 
-        for i=1, #scenarios do
-            SetScenarioTypeEnabled(scenarios[i], false)
-        end
+    -- Dispatch Services
+    for i = 1, 15 do EnableDispatchService(i, false) end
+    SetAudioFlag('PoliceScannerDisabled', true)
+
+    -- Friendly Fire Enable
+    local playerPed = PlayerPedId()
+    SetCanAttackFriendly(playerPed, true, false)
+    NetworkSetFriendlyFireOption(true)
+end)
+
+-- 5. EVENTS
+AddEventHandler("esx:enteredVehicle", function(vehicle, _, seat)
+    if seat > -1 then
+        local playerPed = PlayerPedId()
+        SetPedIntoVehicle(playerPed, vehicle, seat)
+        SetPedConfigFlag(playerPed, 184, true) -- Block drive-by auto-locking for/from NPCs
     end
-end
-
-function Adjustments:LicensePlates()
-    SetDefaultVehicleNumberPlateTextPattern(-1, Config.CustomAIPlates)
-end
-
-local placeHolders = {
-    server_name = function()
-        return GetConvar("sv_projectName", "ESX-Framework")
-    end,
-    server_endpoint = function()
-        return GetCurrentServerEndpoint() or "localhost:30120"
-    end,
-    server_players = function()
-        return GlobalState.playerCount or 0
-    end,
-    server_maxplayers = function()
-        return GetConvarInt("sv_maxClients", 48)
-    end,
-    player_name = function()
-        return GetPlayerName(ESX.playerId)
-    end,
-    player_rp_name = function()
-        return ESX.PlayerData.name or "John Doe"
-    end,
-    player_id = function()
-        return ESX.serverId
-    end,
-    player_street = function()
-        if not ESX.PlayerData.ped then return "Unknown" end
-
-        local playerCoords = GetEntityCoords(ESX.PlayerData.ped)
-        local streetHash = GetStreetNameAtCoord(playerCoords.x, playerCoords.y, playerCoords.z)
-
-        return GetStreetNameFromHashKey(streetHash) or "Unknown"
-    end,
-}
+    SetVehRadioStation(vehicle, "OFF")
+    SetUserRadioControlEnabled(false)
+end)
 
 function Adjustments:ReplacePlaceholders(text)
+    local placeHolders = {
+        server_name = function() return GetConvar("sv_projectName", "ESX-Framework") end,
+        server_endpoint = function() return GetCurrentServerEndpoint() or "localhost:30120" end,
+        server_players = function() return GlobalState.playerCount or 0 end,
+        server_maxplayers = function() return GetConvarInt("sv_maxClients", 48) end,
+        player_name = function() return GetPlayerName(ESX.playerId) end,
+        player_id = function() return ESX.serverId end,
+    }
     for placeholder, cb in pairs(placeHolders) do
         local success, result = pcall(cb)
-
-        if not success then
-            error(("Failed to execute placeholder: ^5%s^7\n%s"):format(placeholder, result))
-            result = "Unknown"
-        end
-
+        if not success then result = "Unknown" end
         text = text:gsub(("{%s}"):format(placeholder), tostring(result))
     end
     return text
 end
 
-function Adjustments:DiscordPresence()
-    if Config.DiscordActivity.appId ~= 0 then
-        CreateThread(function()
-            while true do
-                SetDiscordAppId(Config.DiscordActivity.appId)
-                SetRichPresence(self:ReplacePlaceholders(Config.DiscordActivity.presence))
-                SetDiscordRichPresenceAsset(Config.DiscordActivity.assetName)
-                SetDiscordRichPresenceAssetText(self:ReplacePlaceholders(Config.DiscordActivity.assetText))
-
-                for i = 1, #Config.DiscordActivity.buttons do
-                    local button = Config.DiscordActivity.buttons[i]
-                    local buttonUrl = self:ReplacePlaceholders(button.url)
-                    SetDiscordRichPresenceAction(i - 1, button.label, buttonUrl)
-                end
-
-                Wait(Config.DiscordActivity.refresh)
-            end
-        end)
-    end
-end
-
-function Adjustments:WantedLevel()
-    if not Config.EnableWantedLevel then
-        ClearPlayerWantedLevel(ESX.playerId)
-        SetMaxWantedLevel(0)
-    end
-end
-
-function Adjustments:DisableRadio()
-    if Config.RemoveHudComponents[16] then
-        AddEventHandler("esx:enteredVehicle", function(vehicle, plate, seat, displayName, netId)
-            SetVehRadioStation(vehicle,"OFF")
-            SetUserRadioControlEnabled(false)
-        end)
-    end
-end
-
-function Adjustments:Multipliers()
+if Config.DiscordActivity.appId ~= 0 then
     CreateThread(function()
         while true do
-            SetPedDensityMultiplierThisFrame(Config.Multipliers.pedDensity)
-            SetScenarioPedDensityMultiplierThisFrame(Config.Multipliers.scenarioPedDensityInterior, Config.Multipliers.scenarioPedDensityExterior)
-            SetAmbientVehicleRangeMultiplierThisFrame(Config.Multipliers.ambientVehicleRange)
-            SetParkedVehicleDensityMultiplierThisFrame(Config.Multipliers.parkedVehicleDensity)
-            SetRandomVehicleDensityMultiplierThisFrame(Config.Multipliers.randomVehicleDensity)
-            SetVehicleDensityMultiplierThisFrame(Config.Multipliers.vehicleDensity)
-            Wait(0)
+            SetDiscordAppId(Config.DiscordActivity.appId)
+            SetRichPresence(Adjustments:ReplacePlaceholders(Config.DiscordActivity.presence))
+            SetDiscordRichPresenceAsset(Config.DiscordActivity.assetName)
+            SetDiscordRichPresenceAssetText(Adjustments:ReplacePlaceholders(Config.DiscordActivity.assetText))
+            Wait(Config.DiscordActivity.refresh)
         end
     end)
 end
 
-function Adjustments:DisableHealthArmorBar()
-    CreateThread(function()
-        local minimap = RequestScaleformMovie("minimap")
+function Adjustments:Multipliers() end 
+function Adjustments:Load() end 
+
+-- 6. HIDE HEALTH & ARMOR BARS (Scaleform)
+CreateThread(function()
+    local minimap = RequestScaleformMovie("minimap")
+    while not HasScaleformMovieLoaded(minimap) do Wait(0) end
+
+    -- Toggle Bigmap once to refresh minimap state
+    SetRadarBigmapEnabled(true, false)
+    Wait(0)
+    SetRadarBigmapEnabled(false, false)
     
-        SetRadarBigmapEnabled(true, false)
+    while true do
         Wait(0)
-        SetRadarBigmapEnabled(false, false)
-        
-        while true do
-            Wait(0)
-            BeginScaleformMovieMethod(minimap, "SETUP_HEALTH_ARMOUR")
-            ScaleformMovieMethodAddParamInt(3)
-            EndScaleformMovieMethod()
-        end
-    end)
-end
-
-function Adjustments:Load()
-    self:RemoveHudComponents()
-    self:DisableAimAssist()
-    self:DisableNPCDrops()
-    self:SeatShuffle()
-    self:HealthRegeneration()
-    self:AmmoAndVehicleRewards()
-    self:EnablePvP()
-    self:DispatchServices()
-    self:NPCScenarios()
-    self:LicensePlates()
-    self:DiscordPresence()
-    self:WantedLevel()
-    self:DisableRadio()
-    self:Multipliers()
-    self:DisableHealthArmorBar()
-end
+        BeginScaleformMovieMethod(minimap, "SETUP_HEALTH_ARMOUR")
+        ScaleformMovieMethodAddParamInt(3) -- Hides HP/Armor bars (PVP Hud compatibility)
+        EndScaleformMovieMethod()
+    end
+end)

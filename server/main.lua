@@ -3,7 +3,7 @@ SetGameType("ESX Legacy")
 
 local oneSyncState = GetConvar("onesync", "off")
 local newPlayer = "INSERT INTO `users` SET `accounts` = ?, `identifier` = ?, `group` = ?"
-local loadPlayer = "SELECT `accounts`, `group`, `position`, `inventory`, `skin`, `metadata`"
+local loadPlayer = "SELECT `accounts`, `group`, `inventory`, `skin`, `metadata`"
 
 if Config.StartingInventoryItems then
     newPlayer = newPlayer .. ", `inventory` = ?"
@@ -250,8 +250,7 @@ function loadESXPlayer(identifier, playerId, isNew)
         end
     end
 
-    -- Position
-    userData.coords = json.decode(result.position) or Config.DefaultSpawns[ESX.Math.Random(1,#Config.DefaultSpawns)]
+    userData.coords = Config.DefaultSpawns[ESX.Math.Random(1,#Config.DefaultSpawns)]
 
     -- Skin
     userData.skin = (result.skin and result.skin ~= "") and json.decode(result.skin) or { sex = 0 }
@@ -583,7 +582,6 @@ ESX.RegisterServerCallback("esx:getPlayerData", function(source, cb)
         inventory = xPlayer.getInventory(),
         loadout = xPlayer.getLoadout(),
         money = xPlayer.getMoney(),
-        position = xPlayer.getCoords(true),
         metadata = xPlayer.getMeta(),
     })
 end)
@@ -609,7 +607,6 @@ ESX.RegisterServerCallback("esx:getOtherPlayerData", function(_, cb, target)
         inventory = xPlayer.getInventory(),
         loadout = xPlayer.getLoadout(),
         money = xPlayer.getMoney(),
-        position = xPlayer.getCoords(true),
         metadata = xPlayer.getMeta(),
     })
 end)

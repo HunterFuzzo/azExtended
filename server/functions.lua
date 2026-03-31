@@ -215,14 +215,13 @@ function Core.SavePlayer(xPlayer, cb)
     local parameters <const> = {
         json.encode(xPlayer.getAccounts(true)),
         xPlayer.group,
-        json.encode(xPlayer.getCoords(false, true)),
         json.encode(xPlayer.getInventory(true)),
         json.encode(xPlayer.getMeta()),
         xPlayer.identifier,
     }
 
     MySQL.prepare(
-        "UPDATE `users` SET `accounts` = ?, `group` = ?, `position` = ?, `inventory` = ?, `metadata` = ? WHERE `identifier` = ?",
+        "UPDATE `users` SET `accounts` = ?, `group` = ?, `inventory` = ?, `metadata` = ? WHERE `identifier` = ?",
         parameters,
         function(affectedRows)
             if affectedRows == 1 then
@@ -252,7 +251,6 @@ function Core.SavePlayers(cb)
         parameters[#parameters + 1] = {
             json.encode(xPlayer.getAccounts(true)),
             xPlayer.group,
-            json.encode(xPlayer.getCoords(false, true)),
             json.encode(xPlayer.getInventory(true)),
             json.encode(xPlayer.getMeta()),
             xPlayer.identifier,
@@ -260,7 +258,7 @@ function Core.SavePlayers(cb)
     end
 
     MySQL.prepare(
-        "UPDATE `users` SET `accounts` = ?, `group` = ?, `position` = ?, `inventory` = ?, `metadata` = ? WHERE `identifier` = ?",
+        "UPDATE `users` SET `accounts` = ?, `group` = ?, `inventory` = ?, `metadata` = ? WHERE `identifier` = ?",
         parameters,
         function(results)
             if not results then

@@ -26,7 +26,7 @@ function Death:ByPlayer()
     }
 
     TriggerEvent("esx:onPlayerDeath", data)
-    TriggerServerEvent("esx:onPlayerDeath", data)
+    -- TriggerServerEvent("esx:onPlayerDeath", data)
     self:ResetValues()
 end
 
@@ -41,7 +41,7 @@ function Death:Natural()
     }
 
     TriggerEvent("esx:onPlayerDeath", data)
-    TriggerServerEvent("esx:onPlayerDeath", data)
+    -- TriggerServerEvent("esx:onPlayerDeath", data)
     self:ResetValues()
 end
 
