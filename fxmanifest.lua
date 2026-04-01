@@ -33,7 +33,6 @@ server_scripts {
 	'server/modules/commands.lua',
 
 	'server/bridge/**/*.lua',
-	'server/modules/npwd.lua',
 	'server/migration/**/main.lua',
 	'server/migration/main.lua',
 }
@@ -44,13 +43,9 @@ client_scripts {
 	'client/modules/wrapper.lua',
 	'client/modules/callback.lua',
     'client/modules/adjustments.lua',
-	'client/modules/points.lua',
 
 	'client/modules/events.lua',
 	'client/modules/actions.lua',
-	'client/modules/death.lua',
-    'client/modules/interactions.lua',
-	'client/modules/scaleform.lua',
 	'client/modules/streaming.lua',
 }
 
