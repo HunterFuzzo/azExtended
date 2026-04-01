@@ -1,49 +1,84 @@
 Adjustments = {}
+local LocalPlayerPed, LocalPlayerId = 0, 0
+local lastHealth = 200
 
--- 1. PERSISTENT GLOBAL ADJUSTMENTS (NPC Removal & Weapon Wheel Blocking)
+-- Pre-calculate HUD components to hide
+local HudComponentsToHide = {}
+for i, status in pairs(Config.RemoveHudComponents) do
+    if status then
+        table.insert(HudComponentsToHide, i)
+    end
+end
+
+-- 1. MAIN GLOBAL PERFORMANCE THREAD (High frequency, one loop)
 CreateThread(function()
+    local scaleformCounter = 0
+    local minimap = RequestScaleformMovie("minimap")
+    
     while true do
         Wait(0)
         
-        -- Prevent Car Kill (Ramming Damage)
+        LocalPlayerPed = PlayerPedId()
+        LocalPlayerId = PlayerId()
+        
+        -- Ragdoll / Fall Damage Prevention (Moved from events.lua for optimization)
+        local isFalling = IsPedFalling(LocalPlayerPed) or IsEntityInAir(LocalPlayerPed)
+        if isFalling then
+            SetPedCanRagdoll(LocalPlayerPed, false)
+            SetEntityProofs(LocalPlayerPed, false, false, false, false, false, false, false, true)
+
+            local currentHealth = GetEntityHealth(LocalPlayerPed)
+            if currentHealth < lastHealth then
+                SetEntityHealth(LocalPlayerPed, lastHealth)
+            end
+        else
+            SetPedCanRagdoll(LocalPlayerPed, true)
+            SetEntityProofs(LocalPlayerPed, false, false, false, false, false, false, false, false)
+            lastHealth = GetEntityHealth(LocalPlayerPed)
+        end
+
         SetWeaponDamageModifier(`VEHICLE_HIT`, 0.0)
 
-        -- Block Weapon Wheel (TAB) & Hide Components
-        for i, status in pairs(Config.RemoveHudComponents) do
-            if status then
-                HideHudComponentThisFrame(i)
-                
-                -- Block the Weapon Wheel specifically
-                -- Using ONLY DisableControlAction(0, 37) as it is the most stable method
-                if i == 19 then
-                    DisableControlAction(0, 37, true) 
-                end
+        -- HUD Hiding (Optimized)
+        for i = 1, #HudComponentsToHide do
+            local component = HudComponentsToHide[i]
+            HideHudComponentThisFrame(component)
+            if component == 19 then
+                DisableControlAction(0, 37, true) -- WEAPON_WHEEL
             end
         end
 
-        -- 2. ABSOLUTE NPC REMOVAL (Ambient Peds & Vehicles)
+        -- NPC Suppression (Must be every frame)
         SetPedDensityMultiplierThisFrame(0.0)
         SetScenarioPedDensityMultiplierThisFrame(0.0, 0.0)
         SetRandomVehicleDensityMultiplierThisFrame(0.0)
         SetParkedVehicleDensityMultiplierThisFrame(0.0)
         SetVehicleDensityMultiplierThisFrame(0.0)
-        
         SetAmbientVehicleRangeMultiplierThisFrame(0.0)
         SetAmbientPedRangeMultiplierThisFrame(0.0)
         SetDistantCarsEnabled(false)
         
-        SetEveryoneIgnorePlayer(PlayerId(), true)
-        SetPoliceIgnorePlayer(PlayerId(), true)
-        SetDispatchCopsForPlayer(PlayerId(), false)
+        SetEveryoneIgnorePlayer(LocalPlayerId, true)
+        SetPoliceIgnorePlayer(LocalPlayerId, true)
+        SetDispatchCopsForPlayer(LocalPlayerId, false)
+
+        scaleformCounter = scaleformCounter + 1
+        if scaleformCounter >= 10 then
+            scaleformCounter = 0
+            if HasScaleformMovieLoaded(minimap) then
+                BeginScaleformMovieMethod(minimap, "SETUP_HEALTH_ARMOUR")
+                ScaleformMovieMethodAddParamInt(3) 
+                EndScaleformMovieMethod()
+            end
+        end
     end
 end)
 
--- 3. BACKGROUND CLEANUP (Purge existing entities)
+-- 2. BACKGROUND CLEANUP THREAD (Low frequency)
 CreateThread(function()
     while true do
-        local playerPed = PlayerPedId()
-        if playerPed and playerPed ~= 0 then
-            local coords = GetEntityCoords(playerPed)
+        if LocalPlayerPed ~= 0 then
+            local coords = GetEntityCoords(LocalPlayerPed)
             ClearAreaOfPeds(coords.x, coords.y, coords.z, 300.0, 1)
             ClearAreaOfVehicles(coords.x, coords.y, coords.z, 300.0, false, false, false, false, false)
             RemoveVehiclesFromGeneratorsInArea(coords.x - 500.0, coords.y - 500.0, coords.z - 500.0, coords.x + 500.0, coords.y + 500.0, coords.z + 500.0)
@@ -52,31 +87,31 @@ CreateThread(function()
     end
 end)
 
--- 4. INITIALIZATION ADJUSTMENTS
+-- 3. INITIALIZATION & RECOVERY
 CreateThread(function()
     while not ESX.PlayerLoaded do Wait(100) end
     
-    SetPlayerTargetingMode(0) -- Standard Free Aim (Best for PVP)
-    SetPlayerHealthRechargeMultiplier(ESX.playerId, 0.0)
-    ClearPlayerWantedLevel(ESX.playerId)
+    SetPlayerTargetingMode(0) 
+    SetPlayerHealthRechargeMultiplier(PlayerId(), 0.0)
+    ClearPlayerWantedLevel(PlayerId())
     SetMaxWantedLevel(0)
 
-    -- Dispatch Services
     for i = 1, 15 do EnableDispatchService(i, false) end
     SetAudioFlag('PoliceScannerDisabled', true)
 
-    -- Friendly Fire Enable
-    local playerPed = PlayerPedId()
-    SetCanAttackFriendly(playerPed, true, false)
+    SetCanAttackFriendly(PlayerPedId(), true, false)
     NetworkSetFriendlyFireOption(true)
+    
+    -- Sync Minimap/Bigmap state once
+    SetRadarBigmapEnabled(true, false)
+    Wait(100)
+    SetRadarBigmapEnabled(false, false)
 end)
 
--- 5. EVENTS
+-- 4. EVENTS (Minimalist)
 AddEventHandler("esx:enteredVehicle", function(vehicle, _, seat)
     if seat > -1 then
-        local playerPed = PlayerPedId()
-        SetPedIntoVehicle(playerPed, vehicle, seat)
-        SetPedConfigFlag(playerPed, 184, true) -- Block drive-by auto-locking for/from NPCs
+        SetPedConfigFlag(PlayerPedId(), 184, true) 
     end
     SetVehRadioStation(vehicle, "OFF")
     SetUserRadioControlEnabled(false)
@@ -88,8 +123,8 @@ function Adjustments:ReplacePlaceholders(text)
         server_endpoint = function() return GetCurrentServerEndpoint() or "localhost:30120" end,
         server_players = function() return GlobalState.playerCount or 0 end,
         server_maxplayers = function() return GetConvarInt("sv_maxClients", 48) end,
-        player_name = function() return GetPlayerName(ESX.playerId) end,
-        player_id = function() return ESX.serverId end,
+        player_name = function() return GetPlayerName(PlayerId()) end,
+        player_id = function() return GetPlayerServerId(PlayerId()) end,
     }
     for placeholder, cb in pairs(placeHolders) do
         local success, result = pcall(cb)
@@ -113,21 +148,3 @@ end
 
 function Adjustments:Multipliers() end 
 function Adjustments:Load() end 
-
--- 6. HIDE HEALTH & ARMOR BARS (Scaleform)
-CreateThread(function()
-    local minimap = RequestScaleformMovie("minimap")
-    while not HasScaleformMovieLoaded(minimap) do Wait(0) end
-
-    -- Toggle Bigmap once to refresh minimap state
-    SetRadarBigmapEnabled(true, false)
-    Wait(0)
-    SetRadarBigmapEnabled(false, false)
-    
-    while true do
-        Wait(0)
-        BeginScaleformMovieMethod(minimap, "SETUP_HEALTH_ARMOUR")
-        ScaleformMovieMethodAddParamInt(3) -- Hides HP/Armor bars (PVP Hud compatibility)
-        EndScaleformMovieMethod()
-    end
-end)

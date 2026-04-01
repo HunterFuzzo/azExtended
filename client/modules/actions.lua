@@ -220,7 +220,7 @@ function Actions:PedLoop()
     CreateThread(function()
         while ESX.PlayerLoaded do
             self:TrackPed()
-            Wait(0)
+            Wait(500)
         end
     end)
 end
